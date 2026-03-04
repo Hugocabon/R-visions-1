@@ -1,38 +1,53 @@
 import streamlit as st
 import pandas as pd
 
-# Ton lien export CSV
-SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRcc-V3xEYUl_Mv05vjB_FMbo2mvjrFRTheCIkuQIuAVgcSw2ZcHDgbmupZORUYtNCVVCUG3Zt2SZTR/pub?output=csv"
+# Ton lien de publication qui fonctionne enfin !
+SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRcc-V3xEYUl_Mv05vjB_FMbo2mvjrFRTheCIkuQIuAVgcSw2ZcHDgbmupZORUYTNCVVCTG3Zt2SZTR/pub?output=csv"
 
-st.set_page_config(page_title="Debug Eco-App", page_icon="🧪")
+st.set_page_config(page_title="Eco-Master L2", page_icon="🎓", layout="centered")
 
-st.title("🧪 Diagnostic de l'App")
+@st.cache_data(ttl=60)
+def load_data():
+    df = pd.read_csv(SHEET_URL)
+    df.columns = df.columns.str.strip()
+    return df
+
+st.title("🎓 Eco-Master : Objectif L2")
+st.markdown("---")
 
 try:
-    # 1. Tentative de lecture brute
-    df = pd.read_csv(SHEET_URL)
+    df = load_data()
     
-    # 2. Nettoyage automatique des noms de colonnes (enlève les espaces invisibles)
-    df.columns = df.columns.str.strip()
-    
-    st.success("✅ Données chargées avec succès !")
-    
-    # Affichage des colonnes trouvées pour vérification
-    st.write("Colonnes détectées :", list(df.columns))
-    
-    # Aperçu des 3 premières lignes
-    st.write("Aperçu des données :", df.head(3))
+    # Sidebar pour filtrer les révisions
+    with st.sidebar:
+        st.header("🎯 Vos Objectifs")
+        niveaux = st.multiselect("Choisir les niveaux", options=df['Niveau'].unique(), default=list(df['Niveau'].unique()))
+        matieres = st.multiselect("Choisir les matières", options=df['Thème'].unique(), default=list(df['Thème'].unique()))
 
-    st.markdown("---")
-    
-    # Le moteur du quiz simplifié
-    if st.button("🎲 Tester une question"):
-        q = df.sample().iloc[0]
-        st.info(f"Question : {q['Question']}")
-        if st.button("Voir la réponse"):
-            st.success(f"Réponse : {q['Réponse']}")
+    # Filtrage des données
+    mask = df['Niveau'].isin(niveaux) & df['Thème'].isin(matieres)
+    filtered_df = df[mask]
+
+    if filtered_df.empty:
+        st.warning("Aucune question ne correspond à vos filtres dans le Sheets.")
+    else:
+        # Initialisation de la question dans la session
+        if st.button("🎲 Nouvelle question au hasard", use_container_width=True):
+            st.session_state.current_q = filtered_df.sample().iloc[0]
+            st.session_state.reveal = False
+
+        # Affichage de la question
+        if 'current_q' in st.session_state:
+            q = st.session_state.current_q
+            
+            st.info(f"**{q['Niveau']}** | **Matière :** {q['Thème']}")
+            st.subheader(q['Question'])
+            
+            if st.button("💡 Voir la réponse"):
+                st.session_state.reveal = True
+            
+            if st.session_state.get('reveal'):
+                st.success(f"**Réponse :** {q['Réponse']}")
 
 except Exception as e:
-    st.error("❌ Erreur de lecture")
-    st.warning(f"Message d'erreur : {e}")
-    st.write("Vérifie que ton lien dans le code est identique à celui de tes Notes.")
+    st.error(f"Erreur de flux : {e}")

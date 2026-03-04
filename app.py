@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # Ton lien export CSV
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1-JEZTqNXVx6whsY5XOpcsDk1ujSvLN2p-KRzng3fBeKo/export?format=csv"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRcc-V3xEYUl_Mv05vjB_FMbo2mvjrFRTheCIkuQIuAVgcSw2ZcHDgbmupZORUYtNCVVCUG3Zt2SZTR/pub?output=csv"
 
 st.set_page_config(page_title="Debug Eco-App", page_icon="🧪")
 
